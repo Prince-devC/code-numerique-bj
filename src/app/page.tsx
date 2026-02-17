@@ -245,12 +245,12 @@ export default function Home() {
             </div>
             <div>
               <h1
-                className="text-[13px] font-bold tracking-tight"
+                className="text-base font-bold tracking-tight"
                 style={{ color: "var(--text-primary)" }}
               >
                 Code du Numérique
               </h1>
-              <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 République du Bénin
               </p>
             </div>
@@ -272,7 +272,7 @@ export default function Home() {
           {conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 gap-2">
               <MessageSquare className="w-5 h-5" style={{ color: "var(--text-muted)" }} />
-              <p className="text-[11px] text-center" style={{ color: "var(--text-muted)" }}>
+              <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>
                 Aucune conversation
               </p>
             </div>
@@ -293,14 +293,14 @@ export default function Home() {
                   />
                   <div className="flex-1 min-w-0">
                     <p
-                      className="text-[12px] truncate"
+                      className="text-sm truncate"
                       style={{
                         color: convo.id === activeId ? "var(--text-primary)" : "var(--text-secondary)",
                       }}
                     >
                       {convo.title}
                     </p>
-                    <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                       {convo.date}
                     </p>
                   </div>
@@ -333,7 +333,7 @@ export default function Home() {
                 className="w-3 h-3 shrink-0 mt-0.5"
                 style={{ color: "var(--gov-red)" }}
               />
-              <p className="text-[10px] leading-relaxed" style={{ color: "var(--gov-red)" }}>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--gov-red)" }}>
                 Information juridique uniquement. Consultez un professionnel du droit.
               </p>
             </div>
@@ -360,12 +360,12 @@ export default function Home() {
             </div>
             <div>
               <h1
-                className="text-[13px] font-bold"
+                className="text-base font-bold"
                 style={{ color: "var(--text-primary)" }}
               >
                 Code du Numérique
               </h1>
-              <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 République du Bénin
               </p>
             </div>
@@ -373,7 +373,7 @@ export default function Home() {
 
           <div className="hidden lg:flex items-center gap-2">
             <BookOpen className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-            <span className="text-[12px] font-medium" style={{ color: "var(--text-secondary)" }}>
+            <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
               Assistant Juridique — Code du Numérique
             </span>
           </div>
@@ -450,7 +450,7 @@ export default function Home() {
                         style={{ color: "var(--gov-green)" }}
                       />
                       <p
-                        className="text-[12px] leading-relaxed flex-1"
+                        className="text-sm leading-relaxed flex-1"
                         style={{ color: "var(--text-primary)" }}
                       >
                         {text}
@@ -487,7 +487,7 @@ export default function Home() {
                   />
                   <div className="flex-1 min-w-0">
                     <p
-                      className="text-[11px] font-semibold mb-1.5"
+                      className="text-xs font-semibold mb-1.5"
                       style={{ color: "var(--text-muted)" }}
                     >
                       {msg.role === "user" ? "Vous" : "Assistant Juridique"}
@@ -495,14 +495,14 @@ export default function Home() {
 
                     {msg.role === "user" ? (
                       <p
-                        className="text-[14px] leading-relaxed"
+                        className="text-base leading-relaxed"
                         style={{ color: "var(--text-primary)" }}
                       >
                         {msg.content}
                       </p>
                     ) : (
                       <div
-                        className="prose-chat text-[14px]"
+                        className="prose-chat text-base"
                         style={{ color: "var(--text-primary)" }}
                       >
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -586,7 +586,7 @@ export default function Home() {
                     icon={<Scale className="w-4 h-4 text-white" />}
                   />
                   <div className="flex flex-col gap-2 py-2">
-                    <p className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
+                    <p className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
                       Assistant Juridique
                     </p>
                     <div className="flex items-center gap-1.5">
@@ -626,7 +626,7 @@ export default function Home() {
                 placeholder="Décrivez votre situation ou posez votre question juridique..."
                 disabled={loading}
                 rows={1}
-                className="flex-1 resize-none outline-none text-[14px] leading-relaxed"
+                className="flex-1 resize-none outline-none text-base leading-relaxed"
                 style={{
                   background: "transparent",
                   color: "var(--text-primary)",
@@ -651,7 +651,7 @@ export default function Home() {
             </div>
             <div className="flex items-center justify-center gap-1.5 mt-2">
               <AlertTriangle className="w-3 h-3" style={{ color: "var(--text-muted)" }} />
-              <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 Information juridique à titre indicatif — ne constitue pas un avis juridique officiel
               </p>
             </div>
