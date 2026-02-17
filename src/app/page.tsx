@@ -22,7 +22,6 @@ import {
   BookOpen,
   Shield,
   ShoppingCart,
-  Wifi,
   FileCheck,
   Lock,
   AlertTriangle,
@@ -33,6 +32,8 @@ import {
   MessageSquare,
   Plus,
   Trash2,
+  Menu,
+  X,
 } from "lucide-react";
 
 type Source = { article: string; livre: string; excerpt: string };
@@ -76,15 +77,6 @@ const SUGGESTIONS = [
   },
 ];
 
-const LIVRES = [
-  { label: "Réseaux & Communications", icon: Wifi },
-  { label: "Écrits Électroniques", icon: FileCheck },
-  { label: "Services de Confiance", icon: Shield },
-  { label: "Commerce Électronique", icon: ShoppingCart },
-  { label: "Protection des Données", icon: Lock },
-  { label: "Cybercriminalité", icon: AlertTriangle },
-];
-
 export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -92,6 +84,7 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -119,18 +112,10 @@ export default function Home() {
     localStorage.setItem("conversations", JSON.stringify(convos));
   };
 
-  const updateActiveConvo = (msgs: Message[]) => {
-    setMessages(msgs);
-    if (!activeId) return;
-    const updated = conversations.map((c) =>
-      c.id === activeId ? { ...c, messages: msgs } : c
-    );
-    saveConversations(updated);
-  };
-
   const newConversation = () => {
     setMessages([]);
     setActiveId(null);
+    setSidebarOpen(false);
   };
 
   const switchConversation = (id: string) => {
@@ -138,6 +123,7 @@ export default function Home() {
     if (convo) {
       setActiveId(id);
       setMessages(convo.messages);
+      setSidebarOpen(false);
     }
   };
 
@@ -165,7 +151,6 @@ export default function Home() {
     setMessages(newMsgs);
     setLoading(true);
 
-    // Create conversation if new
     let currentId = activeId;
     if (!currentId) {
       currentId = Date.now().toString();
@@ -214,172 +199,199 @@ export default function Home() {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      send();
-    }
-  };
+  /* ---- Sidebar content (shared between desktop & mobile drawer) ---- */
+  const sidebarContent = (
+    <>
+      {/* Logo + New chat */}
+      <div
+        className="p-4 flex items-center justify-between"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: "var(--gov-green)" }}
+          >
+            <Scale className="w-4.5 h-4.5 text-white" />
+          </div>
+          <div>
+            <h1
+              className="text-base font-bold tracking-tight"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Code du Numérique
+            </h1>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+              République du Bénin
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <Tooltip content="Nouvelle conversation">
+            <Button isIconOnly size="sm" variant="light" onPress={newConversation}>
+              <Plus className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
+            </Button>
+          </Tooltip>
+          {/* Close button only on mobile */}
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            className="lg:hidden"
+            onPress={() => setSidebarOpen(false)}
+          >
+            <X className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
+          </Button>
+        </div>
+      </div>
+
+      {/* Conversation history */}
+      <div className="flex-1 overflow-y-auto p-2">
+        {conversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 gap-2">
+            <MessageSquare className="w-5 h-5" style={{ color: "var(--text-muted)" }} />
+            <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>
+              Aucune conversation
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-0.5">
+            {conversations.map((convo) => (
+              <div
+                key={convo.id}
+                className="group flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors"
+                style={{
+                  background: convo.id === activeId ? "var(--bg-tertiary)" : "transparent",
+                }}
+                onClick={() => switchConversation(convo.id)}
+              >
+                <MessageSquare
+                  className="w-3.5 h-3.5 shrink-0"
+                  style={{ color: convo.id === activeId ? "var(--gov-green)" : "var(--text-muted)" }}
+                />
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-sm truncate"
+                    style={{
+                      color: convo.id === activeId ? "var(--text-primary)" : "var(--text-secondary)",
+                    }}
+                  >
+                    {convo.title}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    {convo.date}
+                  </p>
+                </div>
+                <button
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteConversation(convo.id);
+                  }}
+                >
+                  <Trash2 className="w-3 h-3" style={{ color: "var(--text-muted)" }} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Disclaimer */}
+      <div className="p-3" style={{ borderTop: "1px solid var(--border)" }}>
+        <div
+          className="rounded-xl p-2.5"
+          style={{
+            background: "rgba(232, 17, 45, 0.06)",
+            border: "1px solid rgba(232, 17, 45, 0.12)",
+          }}
+        >
+          <div className="flex items-start gap-2">
+            <AlertTriangle
+              className="w-3 h-3 shrink-0 mt-0.5"
+              style={{ color: "var(--gov-red)" }}
+            />
+            <p className="text-xs leading-relaxed" style={{ color: "var(--gov-red)" }}>
+              Information juridique uniquement. Consultez un professionnel du droit.
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
   return (
-    <div className="flex h-screen" style={{ background: "var(--bg-primary)" }}>
-      {/* Sidebar */}
+    <div className="flex h-dvh" style={{ background: "var(--bg-primary)" }}>
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — desktop: static, mobile: slide-in drawer */}
       <aside
-        className="hidden lg:flex flex-col w-[280px] shrink-0"
+        className={`
+          fixed inset-y-0 left-0 z-50 w-[280px] flex flex-col transition-transform duration-300
+          lg:static lg:translate-x-0 lg:z-auto
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
         style={{
           background: "var(--bg-secondary)",
           borderRight: "1px solid var(--border)",
         }}
       >
-        {/* Logo + New chat */}
-        <div
-          className="p-4 flex items-center justify-between"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "var(--gov-green)" }}
-            >
-              <Scale className="w-4.5 h-4.5 text-white" />
-            </div>
-            <div>
-              <h1
-                className="text-base font-bold tracking-tight"
-                style={{ color: "var(--text-primary)" }}
-              >
-                Code du Numérique
-              </h1>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                République du Bénin
-              </p>
-            </div>
-          </div>
-          <Tooltip content="Nouvelle conversation">
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              onPress={newConversation}
-            >
-              <Plus className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
-            </Button>
-          </Tooltip>
-        </div>
-
-        {/* Conversation history */}
-        <div className="flex-1 overflow-y-auto p-2">
-          {conversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 gap-2">
-              <MessageSquare className="w-5 h-5" style={{ color: "var(--text-muted)" }} />
-              <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>
-                Aucune conversation
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-0.5">
-              {conversations.map((convo) => (
-                <div
-                  key={convo.id}
-                  className="group flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors"
-                  style={{
-                    background: convo.id === activeId ? "var(--bg-tertiary)" : "transparent",
-                  }}
-                  onClick={() => switchConversation(convo.id)}
-                >
-                  <MessageSquare
-                    className="w-3.5 h-3.5 shrink-0"
-                    style={{ color: convo.id === activeId ? "var(--gov-green)" : "var(--text-muted)" }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-sm truncate"
-                      style={{
-                        color: convo.id === activeId ? "var(--text-primary)" : "var(--text-secondary)",
-                      }}
-                    >
-                      {convo.title}
-                    </p>
-                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                      {convo.date}
-                    </p>
-                  </div>
-                  <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteConversation(convo.id);
-                    }}
-                  >
-                    <Trash2 className="w-3 h-3" style={{ color: "var(--text-muted)" }} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Disclaimer */}
-        <div className="p-3" style={{ borderTop: "1px solid var(--border)" }}>
-          <div
-            className="rounded-xl p-2.5"
-            style={{
-              background: "rgba(232, 17, 45, 0.06)",
-              border: "1px solid rgba(232, 17, 45, 0.12)",
-            }}
-          >
-            <div className="flex items-start gap-2">
-              <AlertTriangle
-                className="w-3 h-3 shrink-0 mt-0.5"
-                style={{ color: "var(--gov-red)" }}
-              />
-              <p className="text-xs leading-relaxed" style={{ color: "var(--gov-red)" }}>
-                Information juridique uniquement. Consultez un professionnel du droit.
-              </p>
-            </div>
-          </div>
-        </div>
+        {sidebarContent}
       </aside>
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <header
-          className="flex items-center justify-between px-4 py-3 shrink-0"
+          className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 shrink-0"
           style={{
             background: "var(--bg-secondary)",
             borderBottom: "1px solid var(--border)",
           }}
         >
-          <div className="flex items-center gap-3 lg:hidden">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: "var(--gov-green)" }}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Hamburger on mobile */}
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              className="lg:hidden"
+              onPress={() => setSidebarOpen(true)}
             >
-              <Scale className="w-4 h-4 text-white" />
-            </div>
-            <div>
+              <Menu className="w-5 h-5" style={{ color: "var(--text-secondary)" }} />
+            </Button>
+
+            <div className="flex items-center gap-2 lg:hidden">
+              <div
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center"
+                style={{ background: "var(--gov-green)" }}
+              >
+                <Scale className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              </div>
               <h1
-                className="text-base font-bold"
+                className="text-sm sm:text-base font-bold"
                 style={{ color: "var(--text-primary)" }}
               >
                 Code du Numérique
               </h1>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                République du Bénin
-              </p>
+            </div>
+
+            <div className="hidden lg:flex items-center gap-2">
+              <BookOpen className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+              <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+                Assistant Juridique — Code du Numérique
+              </span>
             </div>
           </div>
 
-          <div className="hidden lg:flex items-center gap-2">
-            <BookOpen className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-            <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
-              Assistant Juridique — Code du Numérique
-            </span>
-          </div>
-
           {mounted && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 sm:gap-1">
               {messages.length > 0 && (
                 <Tooltip content="Nouvelle conversation">
                   <Button isIconOnly variant="light" size="sm" onPress={newConversation}>
@@ -408,22 +420,22 @@ export default function Home() {
         {/* Chat area */}
         <div className="flex-1 overflow-y-auto">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full px-4 py-12">
+            <div className="flex flex-col items-center justify-center min-h-full px-4 sm:px-6 py-8 sm:py-12">
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
                 style={{ background: "var(--gov-green)", boxShadow: "var(--shadow-md)" }}
               >
-                <Scale className="w-8 h-8 text-white" />
+                <Scale className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
 
               <h2
-                className="text-xl font-bold mb-2 tracking-tight"
+                className="text-lg sm:text-xl font-bold mb-2 tracking-tight text-center"
                 style={{ color: "var(--text-primary)" }}
               >
                 Interrogez le Code du Numérique
               </h2>
               <p
-                className="text-sm mb-10 text-center max-w-lg leading-relaxed"
+                className="text-sm mb-6 sm:mb-10 text-center max-w-lg leading-relaxed px-2"
                 style={{ color: "var(--text-secondary)" }}
               >
                 Posez vos questions en langage courant. L&apos;assistant analyse les
@@ -431,20 +443,20 @@ export default function Home() {
                 références exactes.
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-2xl w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 max-w-2xl w-full">
                 {SUGGESTIONS.map(({ text, icon: Icon }) => (
                   <Card
                     key={text}
                     isPressable
                     onPress={() => send(text)}
-                    className="transition-all duration-200 hover:scale-[1.01]"
+                    className="transition-all duration-200 active:scale-[0.98] sm:hover:scale-[1.01]"
                     style={{
                       background: "var(--bg-secondary)",
                       border: "1px solid var(--border)",
                       boxShadow: "var(--shadow-sm)",
                     }}
                   >
-                    <CardBody className="p-3.5 flex-row items-start gap-3">
+                    <CardBody className="p-3 sm:p-3.5 flex-row items-start gap-2.5 sm:gap-3">
                       <Icon
                         className="w-4 h-4 shrink-0 mt-0.5"
                         style={{ color: "var(--gov-green)" }}
@@ -456,7 +468,7 @@ export default function Home() {
                         {text}
                       </p>
                       <ChevronRight
-                        className="w-3.5 h-3.5 shrink-0 mt-0.5"
+                        className="w-3.5 h-3.5 shrink-0 mt-0.5 hidden sm:block"
                         style={{ color: "var(--text-muted)" }}
                       />
                     </CardBody>
@@ -465,12 +477,12 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
               {messages.map((msg, i) => (
-                <div key={i} className="flex gap-3">
+                <div key={i} className="flex gap-2 sm:gap-3">
                   <Avatar
                     size="sm"
-                    className="mt-0.5 shrink-0"
+                    className="mt-0.5 shrink-0 hidden sm:flex"
                     style={{
                       background:
                         msg.role === "user"
@@ -487,7 +499,7 @@ export default function Home() {
                   />
                   <div className="flex-1 min-w-0">
                     <p
-                      className="text-xs font-semibold mb-1.5"
+                      className="text-xs font-semibold mb-1 sm:mb-1.5"
                       style={{ color: "var(--text-muted)" }}
                     >
                       {msg.role === "user" ? "Vous" : "Assistant Juridique"}
@@ -569,7 +581,7 @@ export default function Home() {
 
                     {i < messages.length - 1 && (
                       <Divider
-                        className="mt-5"
+                        className="mt-4 sm:mt-5"
                         style={{ background: "var(--border)" }}
                       />
                     )}
@@ -578,10 +590,10 @@ export default function Home() {
               ))}
 
               {loading && (
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <Avatar
                     size="sm"
-                    className="mt-0.5 shrink-0"
+                    className="mt-0.5 shrink-0 hidden sm:flex"
                     style={{ background: "var(--gov-green)" }}
                     icon={<Scale className="w-4 h-4 text-white" />}
                   />
@@ -603,10 +615,10 @@ export default function Home() {
         </div>
 
         {/* Input */}
-        <div className="shrink-0 px-4 pb-4 pt-2" style={{ background: "var(--bg-primary)" }}>
+        <div className="shrink-0 px-3 sm:px-4 pb-3 sm:pb-4 pt-2" style={{ background: "var(--bg-primary)" }}>
           <div className="max-w-3xl mx-auto">
             <div
-              className="flex items-end gap-2 rounded-2xl px-4 py-3"
+              className="flex items-end gap-2 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3"
               style={{ background: "var(--bg-tertiary)" }}
             >
               <textarea
@@ -623,7 +635,7 @@ export default function Home() {
                     (e.target as HTMLTextAreaElement).style.height = "auto";
                   }
                 }}
-                placeholder="Décrivez votre situation ou posez votre question juridique..."
+                placeholder="Posez votre question juridique..."
                 disabled={loading}
                 rows={1}
                 className="flex-1 resize-none outline-none text-base leading-relaxed"
@@ -632,6 +644,7 @@ export default function Home() {
                   color: "var(--text-primary)",
                   border: "none",
                   fontFamily: "inherit",
+                  fontSize: "16px",
                 }}
               />
               <Button
@@ -649,12 +662,9 @@ export default function Home() {
                 {!loading && <SendHorizonal className="w-4 h-4" />}
               </Button>
             </div>
-            <div className="flex items-center justify-center gap-1.5 mt-2">
-              <AlertTriangle className="w-3 h-3" style={{ color: "var(--text-muted)" }} />
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Information juridique à titre indicatif — ne constitue pas un avis juridique officiel
-              </p>
-            </div>
+            <p className="text-xs text-center mt-1.5 sm:mt-2 px-2" style={{ color: "var(--text-muted)" }}>
+              Information à titre indicatif — pas un avis juridique officiel
+            </p>
           </div>
         </div>
       </main>

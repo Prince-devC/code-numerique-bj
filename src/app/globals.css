@@ -48,6 +48,15 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Prevent iOS zoom on input focus (font-size >= 16px handles this) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .shrink-0:last-child {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+  }
 }
 
 /* Scrollbar */
