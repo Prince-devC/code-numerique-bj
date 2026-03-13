@@ -93,3 +93,79 @@ textarea::placeholder { color: var(--text-muted); }
   margin: 1rem 0 0.5rem;
   color: var(--text-primary);
 }
+
+/* ===== Chat page — Intellichat style ===== */
+.chat-sidebar {
+  background: #0a0f1a;
+  color: #e2e8f0;
+}
+.dark .chat-sidebar {
+  background: #060a12;
+}
+.chat-sidebar-item {
+  transition: background 0.15s;
+}
+.chat-sidebar-item:hover {
+  background: rgba(255,255,255,0.05);
+}
+.chat-sidebar-item.active {
+  background: rgba(0, 98, 51, 0.2);
+  border-left: 2px solid #006233;
+}
+.chat-bubble-user {
+  background: var(--gov-green);
+  color: white;
+  border-radius: 20px 20px 4px 20px;
+}
+.chat-bubble-assistant {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 20px 4px;
+}
+.chat-input-wrap {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: border-color 0.2s;
+}
+.chat-input-wrap:focus-within {
+  border-color: var(--gov-green);
+}
+
+/* ===== Chat page — SaaS style ===== */
+.chat-sidebar {
+  background: #0a0f1a;
+  color: #e2e8f0;
+}
+.dark .chat-sidebar {
+  background: #060a12;
+}
+.chat-sidebar-item {
+  transition: background 0.15s;
+}
+.chat-sidebar-item:hover {
+  background: rgba(255,255,255,0.05);
+}
+.chat-sidebar-item.active {
+  background: rgba(0, 98, 51, 0.2);
+  border-left: 2px solid #006233;
+}
+.chat-bubble-user {
+  background: var(--gov-green);
+  color: white;
+  border-radius: 20px 20px 4px 20px;
+}
+.chat-bubble-assistant {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 20px 4px;
+}
+.chat-input-wrap {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: border-color 0.2s;
+}
+.chat-input-wrap:focus-within {
+  border-color: var(--gov-green);
+}

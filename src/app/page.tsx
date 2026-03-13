@@ -1,673 +1,244 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
-  Button,
-  Chip,
-  Card,
-  CardBody,
-  Accordion,
-  AccordionItem,
-  Divider,
-  Avatar,
-  Tooltip,
-} from "@heroui/react";
-import ReactMarkdown from "react-markdown";
-import {
-  Scale,
-  SendHorizonal,
   Sun,
   Moon,
-  BookOpen,
-  Shield,
-  ShoppingCart,
-  FileCheck,
-  Lock,
-  AlertTriangle,
-  User,
-  Sparkles,
-  ChevronRight,
-  RotateCcw,
+  Search,
   MessageSquare,
-  Plus,
-  Trash2,
+  Shield,
+  BookOpen,
+  Zap,
+  Globe,
+  CloudDownload,
   Menu,
   X,
 } from "lucide-react";
 
-type Source = { article: string; livre: string; excerpt: string };
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  sources?: Source[];
-};
-
-type Conversation = {
-  id: string;
-  title: string;
-  messages: Message[];
-  date: string;
-};
-
-const SUGGESTIONS = [
+const features = [
   {
-    text: "Quels sont mes droits si une entreprise utilise mes données personnelles ?",
+    icon: Search,
+    title: "Recherche sémantique",
+    desc: "Posez votre question en langage courant. Le système identifie les articles pertinents par analyse vectorielle, pas par mots-clés.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Multicanal",
+    desc: "Accessible via le web, WhatsApp et Telegram. Les citoyens consultent le droit numérique depuis les outils qu'ils utilisent déjà.",
+  },
+  {
     icon: Shield,
+    title: "Sources vérifiables",
+    desc: "Chaque réponse cite les articles exacts du Code. Le système ne répond qu'à partir du corpus juridique officiel.",
   },
   {
-    text: "Que dit la loi sur les cybercrimes au Bénin ?",
-    icon: Lock,
+    icon: Zap,
+    title: "Réponse instantanée",
+    desc: "Analyse et synthèse en moins de deux secondes. Plus besoin de parcourir des centaines de pages pour trouver l'information.",
   },
   {
-    text: "Puis-je être poursuivi pour un post sur les réseaux sociaux ?",
-    icon: AlertTriangle,
+    icon: BookOpen,
+    title: "Corpus complet",
+    desc: "L'intégralité de la Loi 2017-20 et sa modification par la Loi 2020-35, structurée et prête à être interrogée.",
   },
   {
-    text: "Comment fonctionne la signature électronique ?",
-    icon: FileCheck,
-  },
-  {
-    text: "Quelles obligations pour un site e-commerce au Bénin ?",
-    icon: ShoppingCart,
-  },
-  {
-    text: "Quelles sanctions pour le piratage informatique ?",
-    icon: Lock,
+    icon: Globe,
+    title: "Accessible à tous",
+    desc: "Interface pensée pour le grand public. Pas besoin de formation juridique pour comprendre ses droits numériques.",
   },
 ];
 
-export default function Home() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+const menuitems = [
+  { title: "Fonctionnalités", path: "#features" },
+  { title: "Comment ça marche", path: "#how" },
+  { title: "Contact", path: "/contact" },
+];
+
+export default function LandingPage() {
   const { theme, setTheme } = useTheme();
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("conversations");
-    if (saved) {
-      try {
-        const convos: Conversation[] = JSON.parse(saved);
-        setConversations(convos);
-        if (convos.length > 0) {
-          setActiveId(convos[0].id);
-          setMessages(convos[0].messages);
-        }
-      } catch {}
-    }
-  }, []);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const saveConversations = (convos: Conversation[]) => {
-    setConversations(convos);
-    localStorage.setItem("conversations", JSON.stringify(convos));
-  };
-
-  const newConversation = () => {
-    setMessages([]);
-    setActiveId(null);
-    setSidebarOpen(false);
-  };
-
-  const switchConversation = (id: string) => {
-    const convo = conversations.find((c) => c.id === id);
-    if (convo) {
-      setActiveId(id);
-      setMessages(convo.messages);
-      setSidebarOpen(false);
-    }
-  };
-
-  const deleteConversation = (id: string) => {
-    const updated = conversations.filter((c) => c.id !== id);
-    saveConversations(updated);
-    if (activeId === id) {
-      if (updated.length > 0) {
-        setActiveId(updated[0].id);
-        setMessages(updated[0].messages);
-      } else {
-        setActiveId(null);
-        setMessages([]);
-      }
-    }
-  };
-
-  const send = async (text?: string) => {
-    const q = (text || input).trim();
-    if (!q || loading) return;
-    setInput("");
-
-    const userMsg: Message = { role: "user", content: q };
-    const newMsgs = [...messages, userMsg];
-    setMessages(newMsgs);
-    setLoading(true);
-
-    let currentId = activeId;
-    if (!currentId) {
-      currentId = Date.now().toString();
-      const title = q.length > 50 ? q.slice(0, 50) + "..." : q;
-      const newConvo: Conversation = {
-        id: currentId,
-        title,
-        messages: newMsgs,
-        date: new Date().toLocaleDateString("fr-FR"),
-      };
-      setActiveId(currentId);
-      saveConversations([newConvo, ...conversations]);
-    } else {
-      const updated = conversations.map((c) =>
-        c.id === currentId ? { ...c, messages: newMsgs } : c
-      );
-      saveConversations(updated);
-    }
-
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: q }),
-      });
-      const data = await res.json();
-      const assistantMsg: Message = {
-        role: "assistant",
-        content: data.answer,
-        sources: data.sources,
-      };
-      const finalMsgs = [...newMsgs, assistantMsg];
-      setMessages(finalMsgs);
-      const updated = (currentId === activeId ? conversations : [{ id: currentId!, title: q.slice(0, 50), messages: [], date: new Date().toLocaleDateString("fr-FR") }, ...conversations])
-        .map((c) => c.id === currentId ? { ...c, messages: finalMsgs } : c);
-      saveConversations(updated);
-    } catch {
-      const errMsg: Message = {
-        role: "assistant",
-        content: "Une erreur est survenue. Veuillez réessayer.",
-      };
-      const finalMsgs = [...newMsgs, errMsg];
-      setMessages(finalMsgs);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ---- Sidebar content (shared between desktop & mobile drawer) ---- */
-  const sidebarContent = (
-    <>
-      {/* Logo + New chat */}
-      <div
-        className="p-4 flex items-center justify-between"
-        style={{ borderBottom: "1px solid var(--border)" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: "var(--gov-green)" }}
-          >
-            <Scale className="w-4.5 h-4.5 text-white" />
-          </div>
-          <div>
-            <h1
-              className="text-base font-bold tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Code du Numérique
-            </h1>
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              République du Bénin
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <Tooltip content="Nouvelle conversation">
-            <Button isIconOnly size="sm" variant="light" onPress={newConversation}>
-              <Plus className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
-            </Button>
-          </Tooltip>
-          {/* Close button only on mobile */}
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            className="lg:hidden"
-            onPress={() => setSidebarOpen(false)}
-          >
-            <X className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
-          </Button>
-        </div>
-      </div>
-
-      {/* Conversation history */}
-      <div className="flex-1 overflow-y-auto p-2">
-        {conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 gap-2">
-            <MessageSquare className="w-5 h-5" style={{ color: "var(--text-muted)" }} />
-            <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>
-              Aucune conversation
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-0.5">
-            {conversations.map((convo) => (
-              <div
-                key={convo.id}
-                className="group flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors"
-                style={{
-                  background: convo.id === activeId ? "var(--bg-tertiary)" : "transparent",
-                }}
-                onClick={() => switchConversation(convo.id)}
-              >
-                <MessageSquare
-                  className="w-3.5 h-3.5 shrink-0"
-                  style={{ color: convo.id === activeId ? "var(--gov-green)" : "var(--text-muted)" }}
-                />
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="text-sm truncate"
-                    style={{
-                      color: convo.id === activeId ? "var(--text-primary)" : "var(--text-secondary)",
-                    }}
-                  >
-                    {convo.title}
-                  </p>
-                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    {convo.date}
-                  </p>
-                </div>
-                <button
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteConversation(convo.id);
-                  }}
-                >
-                  <Trash2 className="w-3 h-3" style={{ color: "var(--text-muted)" }} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Disclaimer */}
-      <div className="p-3" style={{ borderTop: "1px solid var(--border)" }}>
-        <div
-          className="rounded-xl p-2.5"
-          style={{
-            background: "rgba(232, 17, 45, 0.06)",
-            border: "1px solid rgba(232, 17, 45, 0.12)",
-          }}
-        >
-          <div className="flex items-start gap-2">
-            <AlertTriangle
-              className="w-3 h-3 shrink-0 mt-0.5"
-              style={{ color: "var(--gov-red)" }}
-            />
-            <p className="text-xs leading-relaxed" style={{ color: "var(--gov-red)" }}>
-              Information juridique uniquement. Consultez un professionnel du droit.
-            </p>
-          </div>
-        </div>
-      </div>
-    </>
-  );
+  const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
-    <div className="flex h-dvh" style={{ background: "var(--bg-primary)" }}>
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar — desktop: static, mobile: slide-in drawer */}
-      <aside
-        className={`
-          fixed inset-y-0 left-0 z-50 w-[280px] flex flex-col transition-transform duration-300
-          lg:static lg:translate-x-0 lg:z-auto
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
-        style={{
-          background: "var(--bg-secondary)",
-          borderRight: "1px solid var(--border)",
-        }}
-      >
-        {sidebarContent}
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header
-          className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 shrink-0"
-          style={{
-            background: "var(--bg-secondary)",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Hamburger on mobile */}
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              className="lg:hidden"
-              onPress={() => setSidebarOpen(true)}
-            >
-              <Menu className="w-5 h-5" style={{ color: "var(--text-secondary)" }} />
-            </Button>
-
-            <div className="flex items-center gap-2 lg:hidden">
-              <div
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center"
-                style={{ background: "var(--gov-green)" }}
-              >
-                <Scale className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-              </div>
-              <h1
-                className="text-sm sm:text-base font-bold"
-                style={{ color: "var(--text-primary)" }}
-              >
-                Code du Numérique
-              </h1>
-            </div>
-
-            <div className="hidden lg:flex items-center gap-2">
-              <BookOpen className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-              <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
-                Assistant Juridique — Code du Numérique
-              </span>
-            </div>
+    <div className="min-h-dvh" style={{ background: "var(--bg-primary)" }}>
+      {/* ===== NAVBAR (Astroship style) ===== */}
+      <div className="max-w-screen-xl mx-auto px-5">
+        <header className="flex flex-col lg:flex-row justify-between items-center my-5">
+          <div className="flex w-full lg:w-auto items-center justify-between">
+            <Link href="/" className="flex items-center gap-2.5 text-lg">
+              <img src="/logo-icon.svg" alt="" className="w-8 h-8 rounded-lg" />
+              <span className="font-bold" style={{ color: "var(--text-primary)" }}>mondroit</span>
+              <span style={{ color: "var(--text-muted)" }}>.bj</span>
+            </Link>
+            <button className="block lg:hidden" onClick={() => setOpen(!open)}>
+              {open
+                ? <X className="w-5 h-5" style={{ color: "var(--text-primary)" }} />
+                : <Menu className="w-5 h-5" style={{ color: "var(--text-primary)" }} />}
+            </button>
           </div>
 
-          {mounted && (
-            <div className="flex items-center gap-0.5 sm:gap-1">
-              {messages.length > 0 && (
-                <Tooltip content="Nouvelle conversation">
-                  <Button isIconOnly variant="light" size="sm" onPress={newConversation}>
-                    <RotateCcw className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
-                  </Button>
-                </Tooltip>
-              )}
-              <Tooltip content={theme === "dark" ? "Mode clair" : "Mode sombre"}>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  onPress={() => setTheme(theme === "dark" ? "light" : "dark")}
-                >
-                  {theme === "dark" ? (
-                    <Sun className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
-                  ) : (
-                    <Moon className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
-                  )}
-                </Button>
-              </Tooltip>
-            </div>
-          )}
-        </header>
-
-        {/* Chat area */}
-        <div className="flex-1 overflow-y-auto">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-full px-4 sm:px-6 py-8 sm:py-12">
-              <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
-                style={{ background: "var(--gov-green)", boxShadow: "var(--shadow-md)" }}
-              >
-                <Scale className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-              </div>
-
-              <h2
-                className="text-lg sm:text-xl font-bold mb-2 tracking-tight text-center"
-                style={{ color: "var(--text-primary)" }}
-              >
-                Interrogez le Code du Numérique
-              </h2>
-              <p
-                className="text-sm mb-6 sm:mb-10 text-center max-w-lg leading-relaxed px-2"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Posez vos questions en langage courant. L&apos;assistant analyse les
-                539 articles du Code et vous fournit une réponse claire avec les
-                références exactes.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 max-w-2xl w-full">
-                {SUGGESTIONS.map(({ text, icon: Icon }) => (
-                  <Card
-                    key={text}
-                    isPressable
-                    onPress={() => send(text)}
-                    className="transition-all duration-200 active:scale-[0.98] sm:hover:scale-[1.01]"
-                    style={{
-                      background: "var(--bg-secondary)",
-                      border: "1px solid var(--border)",
-                      boxShadow: "var(--shadow-sm)",
-                    }}
-                  >
-                    <CardBody className="p-3 sm:p-3.5 flex-row items-start gap-2.5 sm:gap-3">
-                      <Icon
-                        className="w-4 h-4 shrink-0 mt-0.5"
-                        style={{ color: "var(--gov-green)" }}
-                      />
-                      <p
-                        className="text-sm leading-relaxed flex-1"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {text}
-                      </p>
-                      <ChevronRight
-                        className="w-3.5 h-3.5 shrink-0 mt-0.5 hidden sm:block"
-                        style={{ color: "var(--text-muted)" }}
-                      />
-                    </CardBody>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-              {messages.map((msg, i) => (
-                <div key={i} className="flex gap-2 sm:gap-3">
-                  <Avatar
-                    size="sm"
-                    className="mt-0.5 shrink-0 hidden sm:flex"
-                    style={{
-                      background:
-                        msg.role === "user"
-                          ? "var(--bg-tertiary)"
-                          : "var(--gov-green)",
-                    }}
-                    icon={
-                      msg.role === "user" ? (
-                        <User className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
-                      ) : (
-                        <Scale className="w-4 h-4 text-white" />
-                      )
-                    }
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-xs font-semibold mb-1 sm:mb-1.5"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      {msg.role === "user" ? "Vous" : "Assistant Juridique"}
-                    </p>
-
-                    {msg.role === "user" ? (
-                      <p
-                        className="text-base leading-relaxed"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {msg.content}
-                      </p>
-                    ) : (
-                      <div
-                        className="prose-chat text-base"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
-                      </div>
-                    )}
-
-                    {msg.sources && msg.sources.length > 0 && (
-                      <Accordion
-                        isCompact
-                        className="mt-3 px-0"
-                        itemClasses={{
-                          base: "py-0",
-                          title: "text-xs",
-                          trigger: "py-2",
-                          content: "pb-3",
-                        }}
-                      >
-                        <AccordionItem
-                          key="sources"
-                          aria-label="Sources"
-                          startContent={
-                            <BookOpen
-                              className="w-3.5 h-3.5"
-                              style={{ color: "var(--gov-green)" }}
-                            />
-                          }
-                          title={
-                            <span style={{ color: "var(--text-muted)" }}>
-                              {msg.sources.length} article
-                              {msg.sources.length > 1 ? "s" : ""} de référence
-                            </span>
-                          }
-                        >
-                          <div className="flex flex-wrap gap-1.5">
-                            {msg.sources.map((s, j) => (
-                              <Tooltip
-                                key={j}
-                                content={s.livre?.slice(0, 60) || ""}
-                                delay={300}
-                              >
-                                <Chip
-                                  size="sm"
-                                  variant="flat"
-                                  startContent={
-                                    <Sparkles
-                                      className="w-3 h-3"
-                                      style={{ color: "var(--gov-green)" }}
-                                    />
-                                  }
-                                  style={{
-                                    background: "rgba(0, 98, 51, 0.08)",
-                                    border: "1px solid rgba(0, 98, 51, 0.15)",
-                                    color: "var(--text-accent)",
-                                  }}
-                                >
-                                  Art. {s.article}
-                                </Chip>
-                              </Tooltip>
-                            ))}
-                          </div>
-                        </AccordionItem>
-                      </Accordion>
-                    )}
-
-                    {i < messages.length - 1 && (
-                      <Divider
-                        className="mt-4 sm:mt-5"
-                        style={{ background: "var(--border)" }}
-                      />
-                    )}
-                  </div>
-                </div>
+          <nav className={`${open ? "block" : "hidden"} w-full lg:w-auto mt-2 lg:flex lg:mt-0`}>
+            <ul className="flex flex-col lg:flex-row lg:gap-3">
+              {menuitems.map((item) => (
+                <li key={item.title}>
+                  <a
+                    href={item.path}
+                    onClick={() => setOpen(false)}
+                    className="flex lg:px-3 py-2 items-center transition-colors hover:opacity-80"
+                    style={{ color: "var(--text-secondary)" }}>
+                    {item.title}
+                  </a>
+                </li>
               ))}
-
-              {loading && (
-                <div className="flex gap-2 sm:gap-3">
-                  <Avatar
-                    size="sm"
-                    className="mt-0.5 shrink-0 hidden sm:flex"
-                    style={{ background: "var(--gov-green)" }}
-                    icon={<Scale className="w-4 h-4 text-white" />}
-                  />
-                  <div className="flex flex-col gap-2 py-2">
-                    <p className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-                      Assistant Juridique
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="typing-dot" />
-                      <span className="typing-dot" />
-                      <span className="typing-dot" />
-                    </div>
-                  </div>
-                </div>
+            </ul>
+            <div className="lg:hidden flex items-center mt-3 gap-4">
+              {mounted && (
+                <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="px-4 py-2 rounded-sm w-full text-center text-sm" style={{ background: "var(--bg-tertiary)", color: "var(--text-secondary)" }}>
+                  {theme === "dark" ? "Mode clair" : "Mode sombre"}
+                </button>
               )}
-              <div ref={bottomRef} />
+              <Link href="/chat" className="block w-full rounded-sm text-center px-4 py-2 text-sm font-medium text-white" style={{ background: "var(--gov-green)" }}>
+                Consulter
+              </Link>
             </div>
-          )}
-        </div>
+          </nav>
 
-        {/* Input */}
-        <div className="shrink-0 px-3 sm:px-4 pb-3 sm:pb-4 pt-2" style={{ background: "var(--bg-primary)" }}>
-          <div className="max-w-3xl mx-auto">
-            <div
-              className="flex items-end gap-2 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3"
-              style={{ background: "var(--bg-tertiary)" }}
-            >
-              <textarea
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  e.target.style.height = "auto";
-                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    send();
-                    (e.target as HTMLTextAreaElement).style.height = "auto";
-                  }
-                }}
-                placeholder="Posez votre question juridique..."
-                disabled={loading}
-                rows={1}
-                className="flex-1 resize-none outline-none text-base leading-relaxed"
-                style={{
-                  background: "transparent",
-                  color: "var(--text-primary)",
-                  border: "none",
-                  fontFamily: "inherit",
-                  fontSize: "16px",
-                }}
-              />
-              <Button
-                isIconOnly
-                size="sm"
-                onPress={() => send()}
-                isLoading={loading}
-                isDisabled={!input.trim()}
-                className="shrink-0 rounded-xl mb-0.5"
-                style={{
-                  background: input.trim() ? "var(--gov-green)" : "transparent",
-                  color: input.trim() ? "white" : "var(--text-muted)",
-                }}
-              >
-                {!loading && <SendHorizonal className="w-4 h-4" />}
-              </Button>
-            </div>
-            <p className="text-xs text-center mt-1.5 sm:mt-2 px-2" style={{ color: "var(--text-muted)" }}>
-              Information à titre indicatif — pas un avis juridique officiel
+          <div className="hidden lg:flex items-center gap-4">
+            {mounted && (
+              <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="p-2 rounded-lg transition-colors" style={{ color: "var(--text-secondary)" }}>
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+            )}
+            <Link href="/chat" className="rounded-sm text-center transition px-5 py-2.5 text-sm font-medium text-white" style={{ background: "var(--gov-green)" }}>
+              Consulter le Code
+            </Link>
+          </div>
+        </header>
+      </div>
+
+      {/* ===== HERO (Astroship style: grid 2 cols) ===== */}
+      <main className="max-w-screen-xl mx-auto px-5">
+        <div className="grid lg:grid-cols-2 place-items-center pt-16 pb-8 md:pt-12 md:pb-24">
+          <div className="py-6 md:order-1 hidden md:flex items-center justify-center">
+            <img src="/logo.svg" alt="mondroit.bj" className="w-[400px] h-[400px] drop-shadow-xl" />
+          </div>
+          <div>
+            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold lg:tracking-tight xl:tracking-tighter" style={{ color: "var(--text-primary)" }}>
+              Le Code du Numérique,{" "}
+              <span style={{ color: "var(--gov-green)" }}>accessible à tous.</span>
+            </h1>
+            <p className="text-lg mt-4 max-w-xl" style={{ color: "var(--text-secondary)" }}>
+              Un assistant juridique intelligent qui analyse les 539 articles du Code du Numérique du Bénin et fournit des réponses claires, sourcées et vérifiables. Disponible sur le web, WhatsApp et Telegram.
             </p>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/chat"
+                className="flex gap-2 items-center justify-center rounded-sm text-center transition px-5 py-2.5 text-white font-medium"
+                style={{ background: "var(--gov-green)" }}>
+                <CloudDownload className="w-5 h-5 text-white" />
+                Poser une question
+              </Link>
+              <a
+                href="#features"
+                className="flex gap-2 items-center justify-center rounded-sm text-center transition px-5 py-2.5 border-2 font-medium"
+                style={{ borderColor: "var(--border)", color: "var(--text-primary)", background: "var(--bg-primary)" }}>
+                <BookOpen className="w-4 h-4" />
+                En savoir plus
+              </a>
+            </div>
           </div>
         </div>
       </main>
+
+      {/* ===== FEATURES (Astroship style: title + 3-col grid) ===== */}
+      <section id="features" className="max-w-screen-xl mx-auto px-5 pb-20">
+        <div className="mt-16 md:mt-0">
+          <h2 className="text-4xl lg:text-5xl font-bold lg:tracking-tight" style={{ color: "var(--text-primary)" }}>
+            Tout ce dont vous avez besoin pour comprendre vos droits numériques
+          </h2>
+          <p className="text-lg mt-4" style={{ color: "var(--text-secondary)" }}>
+            mondroit.bj combine recherche vectorielle et intelligence artificielle pour rendre le droit numérique béninois compréhensible par tous.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 mt-16 gap-16">
+          {features.map((item) => (
+            <div key={item.title} className="flex gap-4 items-start">
+              <div className="mt-1 rounded-full p-2 w-8 h-8 shrink-0 flex items-center justify-center" style={{ background: "var(--gov-green)" }}>
+                <item.icon className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg" style={{ color: "var(--text-primary)" }}>{item.title}</h3>
+                <p className="mt-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== HOW IT WORKS ===== */}
+      <section id="how" className="max-w-screen-xl mx-auto px-5 pb-20">
+        <div className="mt-16 md:mt-0 text-center">
+          <h2 className="text-4xl lg:text-5xl font-bold lg:tracking-tight" style={{ color: "var(--text-primary)" }}>
+            Comment ça marche
+          </h2>
+          <p className="text-lg mt-4" style={{ color: "var(--text-secondary)" }}>
+            Trois étapes simples pour accéder au droit numérique béninois.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-3 mt-16 gap-12 max-w-4xl mx-auto">
+          {[
+            { step: "01", title: "Posez votre question", desc: "En langage courant, sur le web, WhatsApp ou Telegram. Pas besoin de connaître les termes juridiques." },
+            { step: "02", title: "Analyse intelligente", desc: "Le système recherche parmi les 539 articles du Code du Numérique les dispositions les plus pertinentes." },
+            { step: "03", title: "Réponse sourcée", desc: "Vous recevez une explication claire avec les références exactes des articles de loi concernés." },
+          ].map((s) => (
+            <div key={s.step} className="text-center">
+              <div className="text-5xl font-bold mb-4" style={{ color: "rgba(0,98,51,0.15)" }}>{s.step}</div>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--text-primary)" }}>{s.title}</h3>
+              <p className="leading-relaxed" style={{ color: "var(--text-secondary)" }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== CTA (Astroship style: dark rounded box) ===== */}
+      <section id="cta" className="max-w-screen-xl mx-auto px-5 pb-20">
+        <div className="p-8 md:px-20 md:py-20 mt-20 mx-auto max-w-5xl rounded-lg flex flex-col items-center text-center" style={{ background: "var(--gov-green)" }}>
+          <h2 className="text-white text-4xl md:text-6xl tracking-tight font-bold">
+            Rendre le droit numérique accessible.
+          </h2>
+          <p className="text-white/70 mt-4 text-lg md:text-xl">
+            mondroit.bj est conçu pour les citoyens, les entrepreneurs, les juristes et les administrations du Bénin. Gratuit, ouvert et disponible sur tous les canaux.
+          </p>
+          <div className="flex mt-5">
+            <Link
+              href="/chat"
+              className="rounded-sm text-center transition px-5 py-2.5 border-2 border-transparent font-medium"
+              style={{ background: "white", color: "var(--gov-green)" }}>
+              Essayer maintenant
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FOOTER (Astroship style) ===== */}
+      <footer className="my-20">
+        <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
+          Copyright &copy; {new Date().getFullYear()} mondroit.bj. Tous droits réservés.
+        </p>
+        <p className="text-center text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+          Information juridique uniquement. Ne constitue pas un avis juridique officiel.
+        </p>
+        <div className="flex items-center justify-center gap-1 mt-3">
+          <span className="w-2 h-2 rounded-full" style={{ background: "var(--gov-green)" }} />
+          <span className="w-2 h-2 rounded-full" style={{ background: "var(--gov-yellow)" }} />
+          <span className="w-2 h-2 rounded-full" style={{ background: "var(--gov-red)" }} />
+        </div>
+      </footer>
     </div>
   );
 }

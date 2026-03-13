@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#006233"/>
+  
+  <!-- Inner subtle ring -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+  
+  <!-- Shield shape - representing protection/law -->
+  <path d="M256 100 L356 155 L356 280 C356 340 310 390 256 410 C202 390 156 340 156 280 L156 155 Z" 
+        fill="rgba(255,255,255,0.12)" stroke="white" stroke-width="3"/>
+  
+  <!-- Balance/Scale -->
+  <!-- Center pillar -->
+  <line x1="256" y1="175" x2="256" y2="310" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Top beam -->
+  <line x1="196" y1="205" x2="316" y2="205" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Left chain -->
+  <line x1="196" y1="205" x2="196" y2="255" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <!-- Right chain -->
+  <line x1="316" y1="205" x2="316" y2="255" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Left plate -->
+  <path d="M170 255 Q183 270 196 255 Q209 270 222 255" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Right plate -->
+  <path d="M290 255 Q303 270 316 255 Q329 270 342 255" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Base -->
+  <rect x="230" y="310" width="52" height="6" rx="3" fill="white"/>
+  <rect x="220" y="316" width="72" height="6" rx="3" fill="white"/>
+  
+  <!-- Digital dots - representing "numérique" -->
+  <circle cx="206" cy="175" r="4" fill="#FCD116"/>
+  <circle cx="306" cy="175" r="4" fill="#FCD116"/>
+  <circle cx="256" cy="160" r="4" fill="#FCD116"/>
+  
+  <!-- Text: mondroit.bj -->
+  <text x="256" y="385" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="700" fill="white" letter-spacing="3">MONDROIT.BJ</text>
+  
+  <!-- Benin flag accent bar -->
+  <rect x="186" y="395" width="46" height="3" rx="1.5" fill="#006233"/>
+  <rect x="233" y="395" width="46" height="3" rx="1.5" fill="#FCD116"/>
+  <rect x="280" y="395" width="46" height="3" rx="1.5" fill="#E8112D"/>
+</svg>

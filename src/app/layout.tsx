@@ -14,9 +14,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Code du Numérique — République du Bénin",
+  title: "mondroit.bj — Code du Numérique du Bénin",
   description:
-    "Assistant juridique IA — Consultez le Code du Numérique du Bénin (Loi 2017-20).",
+    "Consultez le Code du Numérique du Bénin (Loi 2017-20). Assistant juridique intelligent, accessible sur le web, WhatsApp et Telegram.",
 };
 
 export default function RootLayout({
