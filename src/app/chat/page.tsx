@@ -47,10 +47,16 @@ export default function ChatPage() {
   const { theme, setTheme } = useTheme();
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const getSessionKey = () => {
+    let sid = sessionStorage.getItem("mondroit_sid");
+    if (!sid) { sid = crypto.randomUUID(); sessionStorage.setItem("mondroit_sid", sid); }
+    return `conversations_${sid}`;
+  };
+
   useEffect(() => {
     setMounted(true);
     try {
-      const s = localStorage.getItem("conversations");
+      const s = localStorage.getItem(getSessionKey());
       if (s) {
         const c: Conversation[] = JSON.parse(s);
         setConversations(c);
@@ -61,7 +67,7 @@ export default function ChatPage() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  const save = (c: Conversation[]) => { setConversations(c); localStorage.setItem("conversations", JSON.stringify(c)); };
+  const save = (c: Conversation[]) => { setConversations(c); localStorage.setItem(getSessionKey(), JSON.stringify(c)); };
   const newChat = () => { setMessages([]); setActiveId(null); setSidebar(false); };
   const switchChat = (id: string) => { const c = conversations.find((x) => x.id === id); if (c) { setActiveId(id); setMessages(c.messages); setSidebar(false); } };
   const deleteChat = (id: string) => {
